@@ -1,89 +1,220 @@
 # X.509 Cryptographic Collision Analysis Suite
 
-A Python desktop app for demonstrating the Birthday Paradox attack against weak X.509 key generation schemes, with live analytics graphs.
+A Python-based desktop cybersecurity application that demonstrates **Birthday Paradox attacks on weak X.509 certificate parameter generation schemes**, along with **cryptographic prevention mechanisms** and a **9-graph analytics dashboard**.
+
+This project simulates how poor randomness in certificate generation can lead to **collisions, identity spoofing, and trust bypass attacks**.
 
 ---
 
-## Requirements
+## Project Overview
 
-- Python **3.8 or higher**
-- Windows / macOS / Linux
+X.509 certificates are widely used in:
 
----
+* SSL/TLS
+* HTTPS websites
+* Public Key Infrastructure (PKI)
+* Digital signatures
+* Certificate Authorities (CA)
 
-## Step-by-Step Setup
+The security of these certificates depends heavily on:
 
-### Step 1 — Install Python
+* secure serial number generation
+* unpredictable entropy
+* strong hashing
+* strict encoding rules
 
-If you don't have Python installed:
-
-1. Go to https://www.python.org/downloads/
-2. Download the latest **Python 3.x** installer for your OS
-3. Run the installer
- - On Windows: **check "Add Python to PATH"** before clicking Install
-4. Verify it worked — open a terminal and run:
- ```
- python --version
- ```
- You should see something like `Python 3.11.x`
+This project demonstrates how weak entropy sources make certificates vulnerable to **Birthday Paradox collision attacks**.
 
 ---
 
-### Step 2 — Download the project files
+## Core Cryptographic Concept
 
-Save both of these files into the **same folder** on your computer:
+### Birthday Paradox Attack
 
-- `crypto_suite_fixed.py`
-- `requirements.txt`
+The Birthday Paradox states that in a surprisingly small sample size, the probability of collisions becomes very high.
+
+In cryptography, this means two different certificates or keys may produce the same identifier, hash, or serial value.
+
+This enables:
+
+* identity spoofing
+* forged certificates
+* trust chain bypass
+* collision based attacks
+
+For a space of size `N`, collision probability becomes significant near `sqrt(N)`.
+
+For weak 20-bit randomness:
+
+`N = 2^20 = 1,048,576`
+
+A few thousand samples are enough to create high collision probability.
 
 ---
 
-### Step 3 — Install dependencies
+## X.509 Vulnerability Demonstrated
 
-Open a terminal (Command Prompt / PowerShell on Windows, Terminal on Mac/Linux), navigate to your folder, and run:
+The following entropy schemes are tested:
 
+### 1. Sequential Counter
+
+`0,1,2,3,4...`
+
+Extremely predictable.
+
+Attack type:
+
+* predictability attack
+* replay
+* serial spoofing
+
+### 2. Timestamp Based
+
+Uses Unix timestamp style values.
+
+Low entropy and highly guessable.
+
+### 3. Weak Random (20-bit)
+
+Uses only 20 bits of randomness.
+
+This is highly vulnerable to Birthday attacks.
+
+### 4. Secure CSPRNG (128-bit)
+
+Uses 128-bit randomness as the secure prevention model.
+
+Collision probability is practically negligible.
+
+---
+
+## Attack Algorithm Used
+
+The attack module performs collision detection over **25 batches of 2000 keys each**.
+
+### Logic
+
+1. Create an empty set
+2. Iterate through generated keys
+3. Check whether key already exists
+4. If yes -> collision found
+5. Mark batch as vulnerable
+
+### Collision Detection Algorithm
+
+```python
+seen = set()
+
+for value in batch:
+    if value in seen:
+        collision_found = True
+    seen.add(value)
 ```
+
+---
+
+## Prevention Techniques Implemented
+
+### 1. CSPRNG Secure Random Numbers
+
+Uses 128-bit cryptographically strong randomness.
+
+Key space: `2^128`
+
+### 2. SHA-256 Strong Hashing
+
+Prevents weak hash collisions seen in legacy algorithms like MD5 and SHA-1.
+
+### 3. Inner–Outer OID Matching
+
+Ensures inner and outer signature algorithms in X.509 certificates match.
+
+### 4. Strict DER Encoding
+
+Prevents encoding malleability.
+
+### 5. CRL / OCSP Revocation
+
+Simulates live certificate revocation checks.
+
+---
+
+## Graphs and Analytics Dashboard
+
+The system generates **9 analytics plots**:
+
+1. Attack Success Rate
+2. Time vs Parameter Size
+3. Integrity Rate
+4. Latency Overhead
+5. Scheme Comparison
+6. Attack Methodology
+7. Prevention Effectiveness
+8. Resource Usage
+9. Security Improvement
+
+---
+
+## Step by Step Implementation
+
+### Step 1 — Key Generation Module
+
+Implements vulnerable and secure entropy models.
+
+### Step 2 — Attack Module
+
+Runs Birthday collision attack.
+
+### Step 3 — Prevention Module
+
+Applies security mechanisms.
+
+### Step 4 — Analytics Module
+
+Generates 9 matplotlib plots.
+
+### Step 5 — UI Framework
+
+Built using Tkinter for desktop visualization.
+
+---
+
+## Tech Stack
+
+* Python
+* Tkinter
+* Matplotlib
+* Random module
+* Set based collision detection
+
+---
+
+## How to Run
+
+```bash
 pip install -r requirements.txt
+python main.py
 ```
-
-This will install:
-- `matplotlib` — for the 9-plot analytics dashboard
-- `numpy` — required by matplotlib
-
-> **Note:** `tkinter` is built into Python and does **not** need to be installed via pip.
-> If you're on Linux and tkinter is missing, run: `sudo apt install python3-tk`
 
 ---
 
-### Step 4 — Run the app
+## Learning Outcome
 
-In the same terminal, run:
+This project demonstrates practical understanding of:
 
-```
-python crypto_suite_fixed.py
-```
-
-The app window will open.
-
----
-
-## How to Use
-
-1. **Key / Parameter Gen tab** — Select an entropy scheme (e.g. Weak Random or CSPRNG), click **Generate 25 Batches**. The log will show sample generated key values.
-
-2. **Run Attack Suite tab** — Click **Exploit Parameters** to run the Birthday Paradox attack against the generated keys. Results show per-batch collision status and an overall success rate.
-
-3. **Apply Prevention tab** — Select a prevention mechanism (e.g. CSPRNG, SHA-256, DER) and click **Apply Prevention** to re-generate secure keys and re-run the attack.
-
-4. **Analytics & Graphs tab** — After running both an attack and a prevention, click this tab to view 9 rubric plots comparing vulnerable vs secure configurations.
+* X.509 certificate security
+* Birthday paradox
+* collision attacks
+* PKI vulnerabilities
+* cryptographic prevention
+* security analytics visualization
 
 ---
 
-## Troubleshooting
+## Authors
 
-| Problem | Fix |
-|---|---|
-| `ModuleNotFoundError: matplotlib` | Run `pip install -r requirements.txt` again |
-| `No module named tkinter` (Linux) | Run `sudo apt install python3-tk` |
-| Blank graph / graphs not showing | Make sure you run **both** Attack and Prevention before opening the Graphs tab |
-| `python` not recognised (Windows) | Try `python3` instead, or re-install Python with "Add to PATH" checked |
+Group Project by:
+
+* Parnika Banerjee
+* Niyathi S Vedagiri
+* Anna Sunny George
